@@ -7,6 +7,11 @@ angular.module('gservice', [])
         // Service our factory will return
         var googleMapService = {};
 
+        // New vars
+        var geocoder;
+        var map;
+        var marker;
+
         // Array of locations obtained from API calls
         var locations = [];
 
@@ -30,56 +35,75 @@ angular.module('gservice', [])
             selectedLat = latitude;
             selectedLong = longitude;
 
-            // Perform an AJAX call to get all of the records in the db.
-            $http.get('/users').success(function(response){
-
-                // Convert the results into Google Map Format
-                locations = convertToMapPoints(response);
-
-                // Then initialize the map.
-                initialize(latitude, longitude);
-            }).error(function(){});
+            // Then initialize the map.
+            // initialize(latitude, longitude);
+            initialize();
         };
 
-        // Private Inner Functions
-        // --------------------------------------------------------------
-        // Convert a JSON of users into map points
-        var convertToMapPoints = function(response){
+function initialize(){
+    var latlng=new google.maps.LatLng(-33.897,150.099);
+    var myOptions={
+        zoom:9,
+        center:latlng,
+        mapTypeId:google.maps.MapTypeId.HYBRID
+        };
+    map = new google.maps.Map(document.getElementById("map"),myOptions);
+        
+    var rendererOptions={map:map};
+    directionsDisplay=new google.maps.DirectionsRenderer(rendererOptions);
 
-            // Clear the locations holder
-            var locations = [];
-
-            // Loop through all of the JSON entries provided in the response
-            for(var i= 0; i < response.length; i++) {
-                var user = response[i];
-
-                // Create popup windows for each record
-                var  contentString =
-                    '<p><b>Username</b>: ' + user.username +
-                    '<br><b>Age</b>: ' + user.age +
-                    '<br><b>Gender</b>: ' + user.gender +
-                    '<br><b>Favorite Language</b>: ' + user.favlang +
-                    '</p>';
-
-                // Converts each of the JSON records into Google Maps Location format (Note [Lat, Lng] format).
-                locations.push({
-                    latlon: new google.maps.LatLng(user.location[1], user.location[0]),
-                    message: new google.maps.InfoWindow({
-                        content: contentString,
-                        maxWidth: 320
-                    }),
-                    username: user.username,
-                    gender: user.gender,
-                    age: user.age,
-                    favlang: user.favlang
-            });
+    // Clicking on the Map moves the bouncing red marker
+    google.maps.event.addListener(map, 'click', function(e){
+        locations.push({location:e.latLng});
+        if(locations.length == 5){
+            showRoute();
         }
-        // location is now an array populated with records in Google Maps format
-        return locations;
-    };
+        
+        var marker = new google.maps.Marker({
+            position: e.latLng,
+            animation: google.maps.Animation.BOUNCE,
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        });
+    });
+}
+
+var showRoute = function() {
+    var org=locations[locations.length - 1];
+    var dest=locations[0];
+    var request= {
+        origin:org,
+        destination:dest,
+        waypoints:locations,
+        travelMode:google.maps.DirectionsTravelMode.WALKING
+        };
+    
+    directionsService=new google.maps.DirectionsService();
+    directionsService.route(request,function(response,status) {
+        if(status==google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(response);
+            var route = response.routes[0];
+            var summaryPanel = document.getElementById('summary-panel');
+            var totalDistance = 0;
+
+            for (var i = 0; i < route.legs.length; i++) {
+                totalDistance += route.legs[i].distance.value;
+                var routeSegment = i + 1;
+                summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
+                summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
+                summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
+                summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+            }
+            totalDistance = totalDistance / 1000;
+            summaryPanel.innerHTML += totalDistance + 'km <br><br>';
+        }
+        else
+            alert('Failed to get directions');
+        });
+}
 
 // Initializes the map
-var initialize = function(latitude, longitude) {
+var initialize2 = function(latitude, longitude) {
 
     // Uses the selected lat, long as starting point
     var myLatLng = {lat: selectedLat, lng: selectedLong};
