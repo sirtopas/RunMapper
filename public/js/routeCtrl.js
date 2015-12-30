@@ -6,13 +6,6 @@ routeCtrl.controller('routeCtrl', function($scope, $http, $rootScope, geolocatio
     // ----------------------------------------------------------------------------
     $scope.formData = {};
     var coords = {};
-    var lat = 0;
-    var long = 0;
-    var directions = {};
-
-    // Set initial coordinates to the center of the US
-    $scope.formData.latitude = 39.500;
-    $scope.formData.longitude = -98.350;
 
     // Get User's actual coordinates based on HTML5 at window load
     geolocation.getLocation().then(function(data){
@@ -24,31 +17,60 @@ routeCtrl.controller('routeCtrl', function($scope, $http, $rootScope, geolocatio
         $scope.formData.longitude = parseFloat(coords.long).toFixed(3);
         $scope.formData.latitude = parseFloat(coords.lat).toFixed(3);
 
-        // Display message confirming that the coordinates verified.
-        $scope.formData.htmlverified = "Location Verified";
-
         gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
-
     });
     
     // Functions
     // ----------------------------------------------------------------------------
+    $scope.showRoute = function() {
+        var org = $rootScope.locations[$rootScope.locations.length - 1];
+        var dest = $rootScope.locations[0];
+        var request = {
+            origin:org,
+            destination:dest,
+            waypoints:$rootScope.locations,
+            travelMode:google.maps.DirectionsTravelMode.WALKING
+        };
     
-    // Get coordinates based on mouse click. When a click event is detected....
-    $rootScope.$on("clicked", function(){
+        directionsService=new google.maps.DirectionsService();
+        directionsService.route(request,function(response,status) {
+            if(status == google.maps.DirectionsStatus.OK) {
+                directionsDisplay.setDirections(response);
+                var route = response.routes[0];
+                var summaryPanel = document.getElementById('summary-panel');
+                var distancePanel = document.getElementById('total-distance');
+                var elevationPanel = document.getElementById('total-elevation');
 
-        // // Run the gservice functions associated with identifying coordinates
-        // $scope.$apply(function(){
-        //     $scope.formData.latitude = parseFloat(gservice.clickLat).toFixed(3);
-        //     $scope.formData.longitude = parseFloat(gservice.clickLong).toFixed(3);
-        //     $scope.formData.htmlverified = "No location verified";
-        // });
-        
-        // three points through which the directions pass
-    });
+                var totalDistance = 0;
 
- // Creates a new user based on the form fields
-    $scope.createUser = function() {
-        alert("test");
+                for (var i = 0; i < route.legs.length; i++) {
+                    totalDistance += route.legs[i].distance.value;
+                    var routeSegment = i + 1;
+                    summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
+                    summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
+                    summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
+                    summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+                }
+                
+                summaryPanel.innerHTML += totalDistance / 1000 + 'km <br><br>';
+                distancePanel.innerHTML += '<h3>Total Distance:</h3>' + totalDistance / 1000 + 'km';
+                elevationPanel.innerHTML += '<h3>Total Elevation:</h3>' + totalDistance / 1000 + 'km';
+            }
+            else
+                alert('Failed to get directions');
+            });
+        gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
     };
-    });
+    
+    $scope.clearRoute = function() {
+        var summaryPanel = document.getElementById('summary-panel');
+        var distancePanel = document.getElementById('total-distance');
+        var elevationPanel = document.getElementById('total-elevation');
+        
+        summaryPanel.innerHTML = '';
+        distancePanel.innerHTML = '';
+        elevationPanel.innerHTML = '';
+
+        gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
+    };
+});

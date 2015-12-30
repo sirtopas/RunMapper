@@ -32,28 +32,44 @@
 </head>
 
 <body ng-controller="routeCtrl">
-<div class="container">
+<div class="container-fluid">
     <div class="header">
         <h3 class="text-muted">Run Mapper</h3>
-        <button type="submit" class="btn btn-danger btn-block" ng-click="createUser()" ng-disabled="addForm.$invalid">Submit</button>
     </div>
+    
     <!-- Map -->
     <div class="row content">
+        
+        <!-- Controls -->
+        <div class="col-md-1">
+            <div id="control-panel" style="height:800px; overflow:auto;">
+                <button type="submit" class="btn btn-success btn-block" ng-click="showRoute()" ng-disabled="addForm.$invalid">Get Route</button>
+                <button type="submit" class="btn btn-danger btn-block" ng-click="clearRoute()" ng-disabled="addForm.$invalid">Clear Route</button>
+                <div id="total-distance"></div>
+                <div id="total-elevation"></div>
+            </div>
+        </div>
+        
         <!-- Google Map -->
-        <div class="col-md-10">
+        <div class="col-md-9">
             <div id="map" style="width:100%; height:800px;"></div>
         </div>
+        
+        <!-- Route Summary -->
         <div class="col-md-2">
             <div id="summary-panel" style="height:800px; overflow:auto;"></div>
         </div>
+        
     </div>
-    </div>
-    <hr/>
-    <!-- Footer -->
-    <div class="footer">
-        <p class="text-center"><span class="glyphicon glyphicon-check"></span> Created by James Brett -
-            <a href="https://twitter.com/encryption/">@Encryption</a> | <a href="https://github.com/sirtopas/">Github Repo</a></p>
-    </div>
+    
+</div>
+
+<hr/>
+
+<!-- Footer -->
+<div class="footer">
+    <p class="text-center"><span class="glyphicon glyphicon-check"></span> Created by 
+        <a href="https://twitter.com/encryption/">@Encryption</a> | <a href="https://github.com/sirtopas/RunMapper/">Github Repo</a></p>
 </div>
 </body>
 </html>
