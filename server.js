@@ -11,8 +11,8 @@ var app             = express();
 // Express Configuration
 // ----------------------
 // Set MongoDB Connection
-mongoose.connect('mongodb://localhost/RunMapper');
-// mongoose.connect('mongodb://MongoLab-t:xzewS.NHu_15ClnaAQqZGK7qLmFds6.74UFGJi6bby0-@ds058048.mongolab.com:58048/MongoLab-t');
+// mongoose.connect('mongodb://localhost/RunMapper');
+mongoose.connect('mongodb://MongoLab-t:xzewS.NHu_15ClnaAQqZGK7qLmFds6.74UFGJi6bby0-@ds058048.mongolab.com:58048/MongoLab-t');
 
 // Logging and Parsing
 // ---------------------
