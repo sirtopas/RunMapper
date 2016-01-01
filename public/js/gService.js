@@ -60,8 +60,7 @@ angular.module('gservice', [])
             } 
             else {
                 waypointB = new google.maps.Marker({        
-                    position: event.latLng,
-                    map: map
+                    position: event.latLng
                 });
                 
                 directionsRenderer = new google.maps.DirectionsRenderer( {'draggable':true} );
