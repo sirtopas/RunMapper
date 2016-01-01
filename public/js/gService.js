@@ -6,14 +6,11 @@ angular.module('gservice', [])
     // -------------------------------------------------------------
     // Service our factory will return
     var googleMapService = {};
-
-    // New vars
     var map;
     var doMark = true;    
-    var wayA;
-    var wayB;
-    var ren;
-    var ser;
+    var waypointA;
+    var waypointB;
+    var totalDistance = 0;
 
     // Array of locations obtained from API calls
     var locations = [];
@@ -51,39 +48,48 @@ angular.module('gservice', [])
         
         map = new google.maps.Map(document.getElementById("map"),myOptions);
         
-        var control = document.createElement('DIV');
-        control.index = 1;
-        
-        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(control);
-        google.maps.event.addDomListener(control, 'click', function() {
-            doMark = false;
-            markNow();
-        });
-        
         var rendererOptions = {map:map};
         directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
         
         google.maps.event.addListener(map, "click", function(event) {
-            if (!wayA) {
-                wayA = new google.maps.Marker({
+            if (!waypointA) {
+                waypointA = new google.maps.Marker({
                     position: event.latLng,
                     map: map
                 });
             } 
             else {
-                wayB = new google.maps.Marker({        
+                waypointB = new google.maps.Marker({        
                     position: event.latLng,
                     map: map
                 });
                 
-                ren = new google.maps.DirectionsRenderer( {'draggable':true} );
-                ren.setMap(map);
-                ren.setPanel(document.getElementById("directionsPanel"));
-                ser = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer( {'draggable':true} );
+                directionsRenderer.setMap(map);
+                directionsService = new google.maps.DirectionsService();
 
-                //Cria a rota, o DirectionTravelMode pode ser: DRIVING, WALKING, BICYCLING ou TRANSIT
-                ser.route({ 'origin': wayA.getPosition(), 'destination':  wayB.getPosition(), 'travelMode': google.maps.DirectionsTravelMode.WALKING},function(res,sts) {
-                    if(sts=='OK')ren.setDirections(res);
+                directionsService.route({ 'origin': waypointA.getPosition(), 'destination':  waypointB.getPosition(), 'travelMode': google.maps.DirectionsTravelMode.WALKING}, function(response,status) {
+                if(status == google.maps.DirectionsStatus.OK) {
+                    $rootScope.legs++;
+                    directionsRenderer.setDirections(response);
+                    var route = response.routes[0];
+                    var summaryPanel = document.getElementById('summary-panel');
+                    var distancePanel = document.getElementById('total-distance');
+                    var elevationPanel = document.getElementById('total-elevation');
+
+                    totalDistance += route.legs[0].distance.value;
+                    summaryPanel.innerHTML += '<b>Route Segment: ' + $rootScope.legs + '</b><br>';
+                    summaryPanel.innerHTML += route.legs[0].start_address + ' to ';
+                    summaryPanel.innerHTML += route.legs[0].end_address + '<br>';
+                    summaryPanel.innerHTML += route.legs[0].distance.text + '<br><br>';
+                    
+                    distancePanel.innerHTML = '<h3>Total Distance:</h3>' + totalDistance / 1000 + 'km';
+                    elevationPanel.innerHTML = '<h3>Total Elevation:</h3>' + totalDistance / 1000 + 'km';
+                    
+                    waypointA = waypointB;
+                }
+                else
+                    alert('Failed to get directions');
                 });		
             }
         });

@@ -5,6 +5,7 @@ routeCtrl.controller('routeCtrl', function($scope, $http, $rootScope, geolocatio
     // Initializes Variables
     // ----------------------------------------------------------------------------
     $scope.formData = {};
+    $rootScope.legs = 0;
     var coords = {};
 
     // Get User's actual coordinates based on HTML5 at window load
@@ -20,48 +21,6 @@ routeCtrl.controller('routeCtrl', function($scope, $http, $rootScope, geolocatio
         gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
     });
     
-    // Functions
-    // ----------------------------------------------------------------------------
-    $scope.showRoute = function() {
-        var org = $rootScope.locations[$rootScope.locations.length - 1];
-        var dest = $rootScope.locations[0];
-        var request = {
-            origin:org,
-            destination:dest,
-            waypoints:$rootScope.locations,
-            travelMode:google.maps.DirectionsTravelMode.WALKING
-        };
-    
-        directionsService=new google.maps.DirectionsService();
-        directionsService.route(request,function(response,status) {
-            if(status == google.maps.DirectionsStatus.OK) {
-                directionsDisplay.setDirections(response);
-                var route = response.routes[0];
-                var summaryPanel = document.getElementById('summary-panel');
-                var distancePanel = document.getElementById('total-distance');
-                var elevationPanel = document.getElementById('total-elevation');
-
-                var totalDistance = 0;
-
-                for (var i = 0; i < route.legs.length; i++) {
-                    totalDistance += route.legs[i].distance.value;
-                    var routeSegment = i + 1;
-                    summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment + '</b><br>';
-                    summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
-                    summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
-                    summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
-                }
-                
-                summaryPanel.innerHTML += totalDistance / 1000 + 'km <br><br>';
-                distancePanel.innerHTML += '<h3>Total Distance:</h3>' + totalDistance / 1000 + 'km';
-                elevationPanel.innerHTML += '<h3>Total Elevation:</h3>' + totalDistance / 1000 + 'km';
-            }
-            else
-                alert('Failed to get directions');
-            });
-        gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
-    };
-    
     $scope.clearRoute = function() {
         var summaryPanel = document.getElementById('summary-panel');
         var distancePanel = document.getElementById('total-distance');
@@ -70,6 +29,7 @@ routeCtrl.controller('routeCtrl', function($scope, $http, $rootScope, geolocatio
         summaryPanel.innerHTML = '';
         distancePanel.innerHTML = '';
         elevationPanel.innerHTML = '';
+        $rootScope.legs = 0;
 
         gservice.refresh($scope.formData.latitude, $scope.formData.longitude);
     };
