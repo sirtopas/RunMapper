@@ -13,7 +13,7 @@ angular.module('gservice', [])
     var totalDistance = 0;
 
     // Array of locations obtained from API calls
-    var locations = [];
+    var users = [];
 
     // Selected Location (initialize to center of America)
     var selectedLat = 39.50;
@@ -28,12 +28,50 @@ angular.module('gservice', [])
     // Refresh the Map with new data. Function will take new latitude and longitude coordinates.
     googleMapService.refresh = function(latitude, longitude){
         // Clears the holding array of locations
-        locations = [];
+        users = [];
         // Set the selected lat and long equal to the ones provided on the refresh() call
         selectedLat = latitude;
         selectedLong = longitude;
-        // Then initialize the map.
-        initialize(latitude, longitude);
+        
+            // Perform an AJAX call to get all of the records in the db.
+            $http.get('/users').success(function(response){
+
+                // Convert the results into Google Map Format
+                users = convertToMapPoints(response);
+
+                // Then initialize the map.
+                initialize(latitude, longitude);
+            }).error(function(){});
+        };
+
+        // Private Inner Functions
+        // --------------------------------------------------------------
+        // Convert a JSON of users into map points
+        var convertToMapPoints = function(response){
+
+            // Clear the locations holder
+            var locations = [];
+
+            // Loop through all of the JSON entries provided in the response
+            for(var i= 0; i < response.length; i++) {
+                var user = response[i];
+
+                // Create popup windows for each record
+                var  contentString =
+                    '<p><b>Username</b>: ' + user.username +
+                    '<br><b>Age</b>: ' + user.age +
+                    '<br><b>Gender</b>: ' + user.gender +
+                    '</p>';
+
+                // Converts each of the JSON records into Google Maps Location format (Note [Lat, Lng] format).
+                locations.push({
+                    username: user.username,
+                    gender: user.gender,
+                    age: user.age
+            });
+        }
+        // location is now an array populated with records in Google Maps format
+        // return locations;
     };
 
     var initialize = function(latitude, longitude) {
@@ -115,5 +153,3 @@ angular.module('gservice', [])
         
     return googleMapService;
 });
-
-
